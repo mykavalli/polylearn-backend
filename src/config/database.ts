@@ -24,4 +24,10 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+// Query helper function
+export const query = async (text: string, params?: any[]) => {
+  const result = await pool.query(text, params);
+  return result;
+};
+
 export default pool;

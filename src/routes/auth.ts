@@ -1,45 +1,59 @@
 import { Router } from 'express';
-import { authenticate, AuthRequest } from '../middleware/auth';
-import { AppError } from '../middleware/errorHandler';
-import pool from '../config/database';
+import { body } from 'express-validator';
+import { authController } from '../controllers/authController';
+import { runValidations } from '../middleware/validation';
 
 const router = Router();
 
-// POST /v1/auth/register
-router.post('/register', authenticate, async (req: AuthRequest, res, next) => {
-  try {
-    const { name, learningLanguage, nativeLanguage } = req.body;
-    const firebaseUid = req.user!.uid;
-    const email = req.user!.email;
+/**
+ * POST /api/v1/auth/register
+ * Register a new user with Firebase UID
+ */
+router.post(
+  '/register',
+  runValidations([
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('firebaseUid').notEmpty().withMessage('Firebase UID is required'),
+    body('name').optional().isString().isLength({ min: 2, max: 100 }),
+  ]),
+  authController.register
+);
 
-    // Check if user already exists
-    const existingUser = await pool.query(
-      'SELECT id FROM users WHERE firebase_uid = $1',
-      [firebaseUid]
-    );
+/**
+ * POST /api/v1/auth/login
+ * Login with Firebase token
+ */
+router.post(
+  '/login',
+  runValidations([
+    body('firebaseToken').notEmpty().withMessage('Firebase token is required'),
+  ]),
+  authController.loginWithFirebase
+);
 
-    if (existingUser.rows.length > 0) {
-      throw new AppError('User already exists', 409, 'USER_EXISTS');
-    }
+/**
+ * POST /api/v1/auth/verify
+ * Verify JWT token
+ */
+router.post(
+  '/verify',
+  runValidations([
+    body('token').notEmpty().withMessage('Token is required'),
+  ]),
+  authController.verifyToken
+);
 
-    // Create user
-    const result = await pool.query(
-      `INSERT INTO users (firebase_uid, email, name, learning_language, native_language)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, firebase_uid, email, name, learning_language, native_language, 
-                 subscription_tier, total_exp, daily_streak, created_at`,
-      [firebaseUid, email, name, learningLanguage || 'en', nativeLanguage || 'vi']
-    );
+/**
+ * POST /api/v1/auth/refresh
+ * Refresh access token
+ */
+router.post('/refresh', authController.refreshToken);
 
-    const user = result.rows[0];
-
-    res.status(201).json({
-      success: true,
-      data: { user }
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+/**
+ * POST /api/v1/auth/logout
+ * Logout user
+ */
+router.post('/logout', authController.logout);
 
 export default router;
+

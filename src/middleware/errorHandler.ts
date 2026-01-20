@@ -1,11 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../config/logger';
 
+// Async handler wrapper to catch errors
+export const asyncHandler = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
 export const errorHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   logger.error('Error:', {
     message: err.message,
