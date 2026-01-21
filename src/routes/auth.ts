@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { authController } from '../controllers/authController';
+import * as authController from '../controllers/authController';
+import { authMiddleware } from '../middleware/auth';
 import { runValidations } from '../middleware/validation';
 
 const router = Router();
@@ -11,10 +12,9 @@ const router = Router();
  */
 router.post(
   '/register',
+  authMiddleware,
   runValidations([
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('firebaseUid').notEmpty().withMessage('Firebase UID is required'),
-    body('name').optional().isString().isLength({ min: 2, max: 100 }),
+    body('displayName').optional().isString().isLength({ min: 2, max: 100 }),
   ]),
   authController.register
 );
@@ -25,35 +25,41 @@ router.post(
  */
 router.post(
   '/login',
-  runValidations([
-    body('firebaseToken').notEmpty().withMessage('Firebase token is required'),
-  ]),
-  authController.loginWithFirebase
+  authMiddleware,
+  authController.login
 );
 
 /**
- * POST /api/v1/auth/verify
- * Verify JWT token
+ * GET /api/v1/auth/profile
+ * Get current user profile
  */
-router.post(
-  '/verify',
+router.get(
+  '/profile',
+  authMiddleware,
+  authController.getProfile
+);
+
+/**
+ * PUT /api/v1/auth/profile
+ * Update current user profile
+ */
+router.put(
+  '/profile',
+  authMiddleware,
   runValidations([
-    body('token').notEmpty().withMessage('Token is required'),
+    body('displayName').optional().isString().isLength({ min: 2, max: 100 }),
+    body('nativeLanguage').optional().isString(),
+    body('learningLanguage').optional().isString(),
+    body('learningGoal').optional().isString(),
   ]),
-  authController.verifyToken
+  authController.updateProfile
 );
 
 /**
  * POST /api/v1/auth/refresh
- * Refresh access token
+ * Refresh access token (placeholder for client-side Firebase refresh)
  */
-router.post('/refresh', authController.refreshToken);
-
-/**
- * POST /api/v1/auth/logout
- * Logout user
- */
-router.post('/logout', authController.logout);
+router.post('/refresh', authController.refresh);
 
 export default router;
 

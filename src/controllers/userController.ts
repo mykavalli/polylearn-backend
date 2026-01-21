@@ -1,20 +1,21 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
-import { authService } from '../services/authService';
+import { UserService } from '../services/userService';
 import { AppError } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+
+const userService = new UserService();
 
 export class UserController {
   /**
    * Get user profile
    * GET /api/v1/user/profile
    */
-  getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+  getProfile = asyncHandler(async (req: Request, res: Response) => {
     if (!req.user?.uid) {
       throw new AppError('User not authenticated', 401);
     }
 
-    const profile = await authService.getUserProfileByFirebaseUid(req.user.uid);
+    const profile = await userService.getUserByFirebaseUid(req.user.uid);
 
     res.status(200).json({
       success: true,
@@ -26,17 +27,20 @@ export class UserController {
    * Update user profile
    * PUT /api/v1/user/profile
    */
-  updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+  updateProfile = asyncHandler(async (req: Request, res: Response) => {
     if (!req.user?.uid) {
       throw new AppError('User not authenticated', 401);
     }
 
     const { name, learningLanguage, photoUrl } = req.body;
 
-    const updatedProfile = await authService.updateUserProfileByFirebaseUid(
-      req.user.uid,
-      { name, learningLanguage, photoUrl }
-    );
+    const user = await userService.getUserByFirebaseUid(req.user.uid);
+    
+    const updatedProfile = await userService.updateUser(user.id, {
+      displayName: name,
+      learningLanguage,
+      // photoUrl not in current schema, skip for now
+    });
 
     res.status(200).json({
       success: true,
@@ -48,7 +52,7 @@ export class UserController {
    * Delete user account
    * DELETE /api/v1/user/account
    */
-  deleteAccount = asyncHandler(async (req: AuthRequest, res: Response) => {
+  deleteAccount = asyncHandler(async (req: Request, res: Response) => {
     if (!req.user?.uid) {
       throw new AppError('User not authenticated', 401);
     }

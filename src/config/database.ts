@@ -19,7 +19,7 @@ pool.on('connect', () => {
   console.log('✅ PostgreSQL connected');
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   console.error('❌ PostgreSQL error:', err);
   process.exit(-1);
 });
@@ -30,4 +30,6 @@ export const query = async (text: string, params?: any[]) => {
   return result;
 };
 
+// Export both named and default
+export { pool };
 export default pool;

@@ -11,7 +11,12 @@
     "migrate:down": "node-pg-migrate down",
     "migrate:create": "node-pg-migrate create",
     "lint": "eslint . --ext .ts",
-    "test": "jest"
+    "test": "jest",
+    "test:db": "node test-database.js",
+    "test:api": "node test-api.js",
+    "test:all": "node test-all.js",
+    "check:db": "node check-db.js",
+    "check:env": "node test-backend.js"
   },
   "keywords": [
     "language-learning",

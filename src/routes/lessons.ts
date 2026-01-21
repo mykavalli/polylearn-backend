@@ -8,7 +8,7 @@ const router = Router();
 // GET /v1/lessons/:id
 // POST /v1/lessons/:id/submit
 
-router.get('/', authenticate, async (req, res) => {
+router.get('/', authenticate, async (_req, res) => {
   res.json({ success: true, message: 'Lesson routes coming soon' });
 });
 

@@ -8,7 +8,7 @@ const router = Router();
 // GET /v1/pet
 // POST /v1/pet/add-exp
 
-router.post('/create', authenticate, async (req, res) => {
+router.post('/create', authenticate, async (_req, res) => {
   res.json({ success: true, message: 'Pet routes coming soon' });
 });
 

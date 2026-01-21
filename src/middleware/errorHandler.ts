@@ -46,3 +46,14 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+// Validation handler
+export const validationHandler = (
+  _req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
+  // This will be populated by express-validator
+  // For now, just pass through
+  next();
+};
